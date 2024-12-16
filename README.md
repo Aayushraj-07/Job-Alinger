@@ -56,7 +56,7 @@ Setup Instructions:-----
 
     bash
     Copy code
-    git clone https://github.com/your-username/resume-screening-application.git
+    git clone https://github.com/Aayushraj-07/Job-Alinger.git
     cd resume-screening-application
 
 2.	Set up a Virtual Environment (optional but recommended):

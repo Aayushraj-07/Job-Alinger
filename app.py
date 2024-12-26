@@ -5,7 +5,7 @@ import streamlit as st  # Streamlit library for creating the web application
 import os  # For interacting with the operating system
 import io  # For handling byte streams
 from PIL import Image  # Python Imaging Library for image processing
-import pdf2image  # For converting PDF files to images
+import fitz  # PyMuPDF for PDF processing
 import google.generativeai as genai  # Google Generative AI API client
 
 # Load environment variables from a .env file
@@ -16,12 +16,15 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # Helper Functions
 def input_pdf_setup(uploaded_file):
-    """Convert uploaded PDF file to image format."""
-    images = pdf2image.convert_from_bytes(uploaded_file.read())
-    first_page = images[0]
+    """Convert uploaded PDF file to image format using PyMuPDF."""
+    doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
+    first_page = doc[0]
+    pix = first_page.get_pixmap()
     img_byte_arr = io.BytesIO()
-    first_page.save(img_byte_arr, format='JPEG')
+    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+    img.save(img_byte_arr, format='JPEG')
     img_byte_arr = img_byte_arr.getvalue()
+    doc.close()
     return [
         {
             "mime_type": "image/jpeg",
@@ -51,77 +54,6 @@ the job description. First the output should come as a percentage and then keywo
 # Streamlit App Configuration
 st.set_page_config(page_title="Job Aligner", page_icon=":guardsman:")
 st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Job Aligner</h1>", unsafe_allow_html=True)
-
-# Inject custom CSS to style the app
-st.markdown("""
-    <style>
-        body {
-            background-color: #fafafa;
-            font-family: 'Arial', sans-serif;
-            color: #333;
-            line-height: 1.6;
-        }
-        .css-ffhzg2 {
-            background-color: #4CAF50;
-        }
-        .stTextArea textarea {
-            border: 2px solid #4CAF50;
-            border-radius: 5px;
-            padding: 12px;
-            font-size: 16px;
-        }
-        .css-1d391kg {
-            padding: 12px 25px;
-            background-color: #4CAF50;
-            color: white;
-            border-radius: 8px;
-            font-size: 16px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s ease;
-        }
-        .css-1d391kg:hover {
-            background-color: #45a049;
-        }
-        .stButton button {
-            background-color: #4CAF50;
-            color: white;
-            border-radius: 8px;
-            padding: 12px 25px;
-            font-size: 16px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s ease;
-        }
-        .stButton button:hover {
-            background-color: #45a049;
-        }
-        .stAlert {
-            background-color: #FFEB3B;
-            color: #7F7F00;
-        }
-        .stWarning {
-            background-color: #FFCC00;
-            color: #6B6B00;
-        }
-        .stError {
-            background-color: #FFCDD2;
-            color: #B71C1C;
-        }
-        .stSuccess {
-            background-color: #C8E6C9;
-            color: #388E3C;
-        }
-        .stFileUploader {
-            border: 2px dashed #4CAF50;
-            padding: 10px;
-            border-radius: 8px;
-            background-color: #f1f1f1;
-            transition: background-color 0.3s ease;
-        }
-        .stFileUploader:hover {
-            background-color: #e8f5e9;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
 # Input Fields
 input_text = st.text_area("Job Description:", height=100, placeholder="Enter the job description here...")

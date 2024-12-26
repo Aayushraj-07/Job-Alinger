@@ -55,6 +55,77 @@ the job description. First the output should come as a percentage and then keywo
 st.set_page_config(page_title="Job Aligner", page_icon=":guardsman:")
 st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Job Aligner</h1>", unsafe_allow_html=True)
 
+# Inject custom CSS to style the app
+st.markdown("""
+    <style>
+        body {
+            background-color: #fafafa;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            line-height: 2;
+        }
+        .css-ffhzg2 {
+            background-color: #4CAF50;
+        }
+        .stTextArea textarea {
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            padding: 12px;
+            font-size: 16px;
+        }
+        .css-1d391kg {
+            padding: 12px 25px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+        .css-1d391kg:hover {
+            background-color: #45a049;
+        }
+        .stButton button {
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 8px;
+            padding: 12px 25px;
+            font-size: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+        .stButton button:hover {
+            background-color: #45a049;
+        }
+        .stAlert {
+            background-color: #FFEB3B;
+            color: #7F7F00;
+        }
+        .stWarning {
+            background-color: #FFCC00;
+            color: #6B6B00;
+        }
+        .stError {
+            background-color: #FFCDD2;
+            color: #B71C1C;
+        }
+        .stSuccess {
+            background-color: #C8E6C9;
+            color: #388E3C;
+        }
+        .stFileUploader {
+            border: 2px dashed #4CAF50;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #f1f1f1;
+            transition: background-color 0.3s ease;
+        }
+        .stFileUploader:hover {
+            background-color: #e8f5e9;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # Input Fields
 input_text = st.text_area("Job Description:", height=100, placeholder="Enter the job description here...")
 uploaded_file = st.file_uploader("Upload your resume (PDF)...", type=["pdf"])

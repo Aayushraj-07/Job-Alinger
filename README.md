@@ -1,137 +1,111 @@
+# Job Aligner
 
-                                               Job Aligner
-                                               ___________
+An AI-powered Job Aligner application that screens resumes against job descriptions, checks ATS compatibility, and provides personalized feedback to improve candidates’ resumes with real-time response streaming.
 
+## Table of Contents
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Technologies Used](#technologies-used)
+4. [Getting Started](#getting-started)
+   - [Prerequisites](#prerequisites)
+   - [Setup Instructions](#setup-instructions)
+5. [Project Structure](#project-structure)
+6. [How to Use](#how-to-use)
+7. [Future Enhancements](#future-enhancements)
 
-A Job Aligner based application that screens resumes against job descriptions, checks ATS compatibility, and provides personalized feedback to improve candidates’ resumes.
+---
 
-Table of Contents
-1.	Overview
-2.	Features
-3.	Technologies Used
-4.	Getting Started
-     o	Prerequisites
-     o	Setup Instructions
-5.	Project Structure
-6.	How to Use
-________________________________________
+## Overview
 
-Overview
---------
+The **Job Aligner** application helps recruiters and job seekers by analyzing resumes to determine how well they match job descriptions. It calculates match percentages, identifies missing keywords, checks ATS standards, and provides actionable recommendations. The project is integrated with Google's Gemini API via the official `google-genai` SDK for high-speed analysis and real-time streaming feedback.
 
-The Resume Screening Application helps recruiters and job seekers by analyzing resumes to determine how well they match job descriptions. It calculates a match percentage, identifies missing keywords, and provides feedback for improvements. This project uses Natural Language Processing (NLP) to analyze resume content and is integrated with Google Gemini API to generate contextual responses.
+---
 
-Features
---------
+## Features
 
-•	Resume Match Percentage: Calculates how well a resume aligns with a job description.
-•	Keyword Matching & Feedback: Identifies key skills or terms missing from the resume.
-•	ATS Compatibility Check: Ensures the resume meets common ATS standards.
-•	Personalized Feedback: Provides suggestions for improving resume alignment with the job description.
+- **Resume Match Percentage**: Calculates how well a resume aligns with a job description.
+- **Keyword Matching & Feedback**: Identifies key skills or terms missing from the resume.
+- **ATS Compatibility Check**: Ensures the resume meets modern ATS standards.
+- **Personalized HR Evaluation**: Highlights applicant strengths and weaknesses in relation to specific job requirements.
+- **Custom Prompts**: Allows users to run tailored evaluations and questions against the resume and job description.
+- **High-Speed Streaming**: Streams model responses in real-time with sub-second perceived latency.
+- **Multi-Page Support**: Reads and processes entire multi-page resumes cleanly via high-speed local PDF parsing.
 
-Technologies Used
------------------
+---
 
-•	Python: Backend programming language.
-•	Streamlit: Web interface to run the application in the browser.
-•	Google Gemini API: Provides contextual responses and feedback.
-•	PDF2Image: Converts PDF resume files to images for processing.
-•	dotenv: Loads environment variables for API keys.
-•   pillow: Used for additional image processing, like saving and manipulating image formats before passing them  to the AI model.
+## Technologies Used
 
+- **Python**: Backend programming language.
+- **Streamlit**: Fast web application framework.
+- **Google GenAI SDK (`google-genai`)**: Interfacing with Google Gemini Flash models.
+- **PyMuPDF (`fitz`)**: Fast, lightweight local text extraction from PDF files.
+- **python-dotenv**: Managing environment variables for API keys.
 
-Getting Started
----------------
+---
 
-Prerequisites:------
+## Getting Started
 
-Before starting, ensure you have the following:
-•	Python 3.8+ installed on your system.
-•	A Google Gemini API Key for AI-based content generation.
-•	Poppler library (for PDF2Image) if you're working with PDFs on Windows.
+### Prerequisites
+- Python 3.8+ installed on your system.
+- A Google Gemini API Key from [Google AI Studio](https://aistudio.google.com/).
 
-Setup Instructions:-----
+### Setup Instructions
 
-1.	Clone the Repository: Download the code from the repository.
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/Aayushraj-07/Job-Alinger.git
+   cd Job-Alinger
+   ```
 
-    bash
-    Copy code
-    git clone https://github.com/Aayushraj-07/Job-Alinger.git
-    cd resume-screening-application
+2. **Set up a Virtual Environment**:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate   # On Windows use: venv\Scripts\activate
+   ```
 
-2.	Set up a Virtual Environment (optional but recommended):
+3. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-    bash
-    Copy code
-    python -m venv venv
-    source venv/bin/activate   # On Windows use: venv\Scripts\activate
+4. **Configure API Key**:
+   Create a `.env` file in the root directory and add your key:
+   ```env
+   GOOGLE_API_KEY=your_api_key_here
+   ```
 
-3.	Install Dependencies: Install the required Python libraries.
+---
 
-    bash
-    Copy code
-    pip install -r requirements.txt
+## Project Structure
 
-4.	Configure API Key:
+```text
+├── .devcontainer/         # Dev container configuration for Codespaces / Docker
+├── app.py                 # Main Streamlit application and Gemini workflow
+├── requirements.txt       # Project dependencies
+├── .env                   # Environment variables (excluded from git)
+└── README.md              # Project documentation
+```
 
-    o	Create a .env file in the root directory.
-    o	Add your Google Gemini API key to the .env file:
-    plaintext
-    Copy code
-    GOOGLE_API_KEY=your_api_key_here
+---
 
-5.	Install Poppler (for Windows users only):
+## How to Use
 
-o	Download Poppler for Windows here.
-o	Extract the files and note the path (e.g., C:\path\to\poppler\bin).
-o	Add this path to your PATH environment variable.
-_____________________________________________________________________
+1. **Run the Application**:
+   ```bash
+   streamlit run app.py
+   ```
 
-Project Structure
------------------
+2. **Using the Interface**:
+   - **Job Description**: Enter or paste the job description.
+   - **Upload Resume**: Upload your resume in PDF format.
+   - **Choose Analysis**:
+     - *Tell Me About Resume*: Comprehensive HR manager review.
+     - *Percentage Match*: ATS alignment score and missing keywords.
+     - *Use Custom Prompt*: Custom query or prompt against the resume.
 
-The main files and directories in this project:
-•	app.py: Main Python script for running the application.
-•	requirements.txt: List of required Python libraries.
-•	.env: File containing environment variables (Google API Key).
-•	README.md: Project documentation.
+---
 
-How to Use
-----------
-
-1.	Run the Application:
-    o	Start the application with Streamlit:
-        bash
-        Copy code
-        streamlit run app.py
-
-2.	Using the Interface:
-
-    •	Job Description: Enter the job description in the provided text box.
-    •	Upload Resume: Upload a resume in PDF format.
-    •	Analyze Options: Click the buttons for different analyses:
-    •	Tell Me About the Resume: Provides a general analysis.
-    •	Percentage Match: Calculates the match percentage and lists missing keywords.
-    •   Custom Prompt 
-
-3.	Results and Feedback:
-
-    o	The app will display detailed feedback and recommendations for improving the resume.
-________________________________________
-
-Sample Code Breakdown
----------------------
-Below is a breakdown of key functions in app.py:
-•	get_gemini_response(): Sends job description and resume content to Google Gemini API for evaluation.
-•	input_pdf_setup(): Converts the uploaded PDF to an image format compatible with the Google API.
-•	Streamlit Buttons: Each button triggers different types of analysis and displays results.
-________________________________________
-Future Enhancements
-•	Add more resume evaluation metrics.
-•	Integrate with additional NLP libraries for deeper analysis.
-•	Enable export options for analysis reports.
-
-## Website Link
-https://job-alinger.streamlit.app/
-
-
+## Future Enhancements
+- Add export options (PDF / Markdown report downloads).
+- Interactive keyword visualization and scoring charts.
+- Support for Word document formats (.docx).

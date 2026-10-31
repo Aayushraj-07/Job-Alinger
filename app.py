@@ -1,42 +1,81 @@
 # Import required libraries
 from dotenv import load_dotenv  # For loading environment variables from .env file
-import base64  # For encoding binary data to base64
 import streamlit as st  # Streamlit library for creating the web application
 import os  # For interacting with the operating system
-import io  # For handling byte streams
-from PIL import Image  # Python Imaging Library for image processing
-import fitz  # PyMuPDF for PDF processing
-import google.generativeai as genai  # Google Generative AI API client
+import fitz  # PyMuPDF for high-speed local text extraction
+from google import genai  # Modern Google GenAI SDK client
+from google.genai import types  # Types for content generation
 
 # Load environment variables from a .env file
 load_dotenv()
 
-# Configure the Google Gemini API with the API key from environment variables
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-
 # Helper Functions
-def input_pdf_setup(uploaded_file):
-    """Convert uploaded PDF file to image format using PyMuPDF."""
-    doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
-    first_page = doc[0]
-    pix = first_page.get_pixmap()
-    img_byte_arr = io.BytesIO()
-    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-    img.save(img_byte_arr, format='JPEG')
-    img_byte_arr = img_byte_arr.getvalue()
-    doc.close()
-    return [
-        {
-            "mime_type": "image/jpeg",
-            "data": base64.b64encode(img_byte_arr).decode()
-        }
-    ]
+def get_gemini_client():
+    """Initialize and return the Google GenAI client."""
+    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        st.error("Google API Key not found. Please add GOOGLE_API_KEY to your .env file.")
+        return None
+    return genai.Client(api_key=api_key)
 
-def get_gemini_response(input, pdf_content, prompt):
-    """Generate a response from the Google Gemini API."""
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    response = model.generate_content([input, pdf_content[0], prompt])
-    return response.text
+def input_pdf_setup(uploaded_file):
+    """
+    Extract text locally from PDF using PyMuPDF (near-instant).
+    Falls back to raw PDF bytes if the PDF is scanned / contains no selectable text.
+    """
+    pdf_bytes = uploaded_file.getvalue()
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        text = "\n".join([page.get_text() for page in doc]).strip()
+        doc.close()
+        if text:
+            return {"type": "text", "data": text}
+    except Exception:
+        pass
+    
+    # Fallback to raw PDF bytes for scanned documents
+    return {"type": "pdf", "data": pdf_bytes}
+
+def stream_gemini_response(input, pdf_data, prompt):
+    """Stream response from the Google Gemini API chunk-by-chunk for near-instant rendering."""
+    client = get_gemini_client()
+    if not client:
+        return
+    
+    contents = []
+    if input:
+        contents.append(f"Job Description:\n{input}")
+    
+    if pdf_data["type"] == "text":
+        contents.append(f"Resume Content:\n{pdf_data['data']}")
+    else:
+        pdf_part = types.Part.from_bytes(
+            data=pdf_data["data"],
+            mime_type="application/pdf"
+        )
+        contents.append(pdf_part)
+        
+    contents.append(prompt)
+    
+    # Attempt streaming with modern active Flash models
+    candidate_models = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-2.5-flash']
+    last_error = None
+    for model_name in candidate_models:
+        try:
+            response_stream = client.models.generate_content_stream(
+                model=model_name,
+                contents=contents
+            )
+            for chunk in response_stream:
+                if chunk.text:
+                    yield chunk.text
+            return
+        except Exception as e:
+            last_error = e
+            continue
+    
+    if last_error:
+        raise last_error
 
 # Prompts
 input_prompt1 = """
@@ -140,31 +179,37 @@ if uploaded_file:
 # Prompt 1: Evaluate Resume
 if submit_resume_eval:
     if uploaded_file:
-        pdf_content = input_pdf_setup(uploaded_file)
-        response = get_gemini_response(input_text, pdf_content, input_prompt1)
-        st.subheader("Evaluation Results")
-        st.write(response)
+        try:
+            pdf_data = input_pdf_setup(uploaded_file)
+            st.subheader("Evaluation Results")
+            st.write_stream(stream_gemini_response(input_text, pdf_data, input_prompt1))
+        except Exception as e:
+            st.error(f"Error evaluating resume: {e}")
     else:
         st.error("Please upload a resume. ❌")
 
 # Prompt 2: Percentage Match
 if submit_match_eval:
     if uploaded_file:
-        pdf_content = input_pdf_setup(uploaded_file)
-        response = get_gemini_response(input_text, pdf_content, input_prompt2)
-        st.subheader("Percentage Match")
-        st.write(response)
+        try:
+            pdf_data = input_pdf_setup(uploaded_file)
+            st.subheader("Percentage Match")
+            st.write_stream(stream_gemini_response(input_text, pdf_data, input_prompt2))
+        except Exception as e:
+            st.error(f"Error calculating match percentage: {e}")
     else:
         st.error("Please upload a resume. ❌")
 
 # Custom Prompt
 if submit_custom_eval:
     if uploaded_file:
-        pdf_content = input_pdf_setup(uploaded_file)
         if custom_prompt.strip():
-            response = get_gemini_response(input_text, pdf_content, custom_prompt)
-            st.subheader("Custom Prompt Response")
-            st.write(response)
+            try:
+                pdf_data = input_pdf_setup(uploaded_file)
+                st.subheader("Custom Prompt Response")
+                st.write_stream(stream_gemini_response(input_text, pdf_data, custom_prompt))
+            except Exception as e:
+                st.error(f"Error processing custom prompt: {e}")
         else:
             st.warning("Please provide a custom prompt. 📝")
     else:

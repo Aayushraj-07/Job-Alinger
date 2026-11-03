@@ -57,10 +57,16 @@ def stream_gemini_response(input, pdf_data, prompt):
         
     contents.append(prompt)
     
-    # Attempt streaming with modern active Flash models
-    candidate_models = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-2.5-flash']
+    # Attempt streaming with modern active Flash models in order of availability and stability
+    candidate_models = [
+        'gemini-3.6-flash',
+        'gemini-3.5-flash',
+        'gemini-3.8-flash',
+        'gemini-3.5-flash-lite'
+    ]
     last_error = None
     for model_name in candidate_models:
+        has_yielded = False
         try:
             response_stream = client.models.generate_content_stream(
                 model=model_name,
@@ -68,10 +74,15 @@ def stream_gemini_response(input, pdf_data, prompt):
             )
             for chunk in response_stream:
                 if chunk.text:
+                    has_yielded = True
                     yield chunk.text
             return
         except Exception as e:
             last_error = e
+            # If streaming already started yielding tokens to the UI, do not restart
+            # with another model as that would produce duplicate/corrupted output.
+            if has_yielded:
+                raise e
             continue
     
     if last_error:
